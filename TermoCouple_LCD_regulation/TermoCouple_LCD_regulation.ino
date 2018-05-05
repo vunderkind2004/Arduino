@@ -79,7 +79,13 @@ void setup() {
 
 int ConvertToPhisicalValue(int xMax, int xMin, int xRead )
 {
-    double result = ((((double)xMax - (double)xMin)/maxRealRead)*(xRead + 1));
+    if(xRead == 0)
+      return (int) xMin;
+  
+    if(xRead >= maxRealRead)
+      return (int) xMax;
+    
+    double result = ((((double)xMax - (double)xMin)/maxRealRead)*(xRead));
     return (int) result;
 }
 
@@ -173,7 +179,7 @@ void ReadPotinciometers()
      Tset +=5;
    }
 
-   dTset = ConvertToPhisicalValue(dTmax , dTmin, dTread) + 1;
+   dTset = ConvertToPhisicalValue(dTmax , dTmin, dTread);
   
 }
 
