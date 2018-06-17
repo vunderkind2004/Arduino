@@ -37,7 +37,13 @@ void loop() {
   analogWrite(led, 0);
   delay(100);
   //for(int i=45; i<= 140; i++)
-  for(int i=0; i<= 250; i++)
+  for(int i=0; i<= 255; i++)
+  {
+    analogWrite(led, i);
+    delay(30);
+  }
+  delay(100);
+  for(int i=255; i>0; i--)
   {
     analogWrite(led, i);
     delay(30);
