@@ -6,6 +6,8 @@
 #include "Adafruit_MAX31855.h"
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
+#include <Adafruit_INA219.h>
+
 //!!! Change LiquidCrystal_I2C.cpp at line 19 instead of "return 0;" should be: return 1;
 
 // Default connection is using software SPI, but comment and uncomment one of
@@ -76,7 +78,21 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 cha
 //#define MAXCS   10
 //Adafruit_MAX31855 thermocouple(MAXCS);
 
+Adafruit_INA219 ina219;
+
 void setup() {
+
+	// Initialize the INA219.
+	// By default the initialization will use the largest range (32V, 2A).  However
+	// you can call a setCalibration function to change this range (see comments).
+	
+	ina219.begin();
+	
+	// To use a slightly lower 32V, 1A range (higher precision on amps):
+	//ina219.setCalibration_32V_1A();
+	// Or to use a lower 16V, 400mA range (higher precision on volts and amps):
+	//ina219.setCalibration_16V_400mA();
+
 	pinMode(HEATER, OUTPUT);
 
 	//First clear all three prescaler bits:
@@ -338,9 +354,16 @@ void DoMeasurement(int pointPosition)
 	}
 	//I,U,t,E
 	timeArr[pointPosition] = millis();
-	I[pointPosition] =  analogRead(Tpin);
-	U[pointPosition] =  analogRead(dTpin);	
-	E[pointPosition] = analogRead(A2);
+	//busvoltage = ina219.getBusVoltage_V();
+	//current_mA = ina219.getCurrent_mA();
+	
+	
+	I[pointPosition] = ina219.getCurrent_mA();	
+	U[pointPosition] = 1000 * ina219.getBusVoltage_V();
+
+	//I[pointPosition] =  analogRead(Tpin);
+	//U[pointPosition] =  analogRead(dTpin);	
+	//E[pointPosition] = analogRead(A2);
 }
 
 void DoLoad()
