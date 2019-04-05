@@ -67,7 +67,7 @@ void setup() {
  
   while (!Serial) delay(1); // wait for Serial on Leonardo/Zero, etc
 
-  lcd.init();                      // initialize the lcd    
+  lcd.begin();                      // initialize the lcd    
   lcd.backlight();
   //lcd.setCursor(5, 0);
   //lcd.print("TERMOMETR");
