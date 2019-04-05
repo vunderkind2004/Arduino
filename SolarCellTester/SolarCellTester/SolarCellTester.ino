@@ -80,6 +80,9 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 cha
 
 Adafruit_INA219 ina219;
 
+String inputString = "";         // a String to hold incoming data
+boolean stringComplete = false;  // whether the string is complete
+
 void setup() {
 
 	// Initialize the INA219.
@@ -106,7 +109,11 @@ void setup() {
 	SetHeater(true);
 	SetHeater(false);
 
-	Serial.begin(9600);
+	//Serial.begin(9600);
+	Serial.begin(115200);
+
+	// reserve 200 bytes for the inputString:
+	inputString.reserve(200);
 
 	hh = "00";
 	mm = "00";
@@ -118,7 +125,8 @@ void setup() {
 	//lcd.backlight();
 	
 
-	Serial.println("time;temperature;heaterIsOn;heaterPersentage");
+	Serial.println("Ready.");
+	Serial.println("Send new line (\\n) for START");
 	// wait for MAX chip to stabilize
 	delay(500);
 }
@@ -354,16 +362,17 @@ void DoMeasurement(int pointPosition)
 	}
 	//I,U,t,E
 	timeArr[pointPosition] = millis();
-	//busvoltage = ina219.getBusVoltage_V();
-	//current_mA = ina219.getCurrent_mA();
-	
-	
-	I[pointPosition] = ina219.getCurrent_mA();	
-	U[pointPosition] = 1000 * ina219.getBusVoltage_V();
 
-	//I[pointPosition] =  analogRead(Tpin);
-	//U[pointPosition] =  analogRead(dTpin);	
-	//E[pointPosition] = analogRead(A2);
+	
+	//int shuntVoltage_mV = ina219.getShuntVoltage_mV();
+
+	int busVoltage_mV = 1000 * ina219.getBusVoltage_V();		
+	I[pointPosition] = ina219.getCurrent_mA();	
+	//I[pointPosition] = shuntVoltage_mV;	
+	U[pointPosition] = busVoltage_mV;
+	//U[pointPosition] =  analogRead(A0);	
+
+	
 }
 
 void DoLoad()
@@ -430,10 +439,25 @@ void loop() {
 	//	//heaterEnabled = false; //disables the above code
 	//}
 
-	if (loadEnabled )//&& CheckTime(loadMiliseconds, 30000UL, repeatLoad))
+
+	if (stringComplete) {
+		stringComplete = false;
+		//Serial.println(inputString);
+		// clear the string:
+		inputString = "";	
+		DoTest();
+	}
+
+	
+
+	
+}
+
+void DoTest() {
+	if (loadEnabled)//&& CheckTime(loadMiliseconds, 30000UL, repeatLoad))
 	{
 		loadEnabled = false;
-		
+
 		//light on
 		digitalWrite(HEATER, HIGH);
 		delay(30000);
@@ -442,10 +466,30 @@ void loop() {
 		//light off
 		digitalWrite(HEATER, LOW);
 		PrintMeasurement();
-		
+
 		delay(600000);
 		loadEnabled = true;
 	}
+}
 
-	
+
+
+
+/*
+  SerialEvent occurs whenever a new data comes in the hardware serial RX. This
+  routine is run between each time loop() runs, so using delay inside loop can
+  delay response. Multiple bytes of data may be available.
+*/
+void serialEvent() {
+	while (Serial.available()) {
+		// get the new byte:
+		char inChar = (char)Serial.read();
+		// add it to the inputString:
+		inputString += inChar;
+		// if the incoming character is a newline, set a flag so the main loop can
+		// do something about it:
+		if (inChar == '\n') {
+			stringComplete = true;
+		}
+	}
 }
